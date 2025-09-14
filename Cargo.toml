@@ -1,0 +1,18 @@
+[package]
+name = "rocksdb_lz4_test"
+version = "0.1.0"
+edition = "2021"
+authors = ["Test <test@example.com>"]
+description = "简单的 RocksDB + LZ4 编译测试"
+
+[lib]
+name = "rocksdb_lz4_test"
+path = "src/lib.rs"
+
+[dependencies]
+rocksdb = { version = "0.24", features = ["mt_static"] }
+lz4 = "1.24"
+tempfile = "3.8"
+
+[build-dependencies]
+# 确保使用系统库而不是从源码编译

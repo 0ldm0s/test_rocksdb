@@ -1,0 +1,7 @@
+[build]
+rustflags = ["-L", "C:\\msys64\\mingw64\\lib"]
+
+[env]
+LIBROcksDB_STATIC = "1"
+ROCKSDB_LIB_DIR = "C:\\msys64\\mingw64\\lib"
+ROCKSDB_INCLUDE_DIR = "C:\\msys64\\mingw64\\include"
