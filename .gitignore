@@ -19,3 +19,6 @@ Thumbs.db
 # 临时文件
 *.tmp
 *.temp
+
+# 分发包目录
+/dist
