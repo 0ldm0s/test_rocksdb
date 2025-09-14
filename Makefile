@@ -89,6 +89,11 @@ help:
 	@echo "  make clean           - 清理构建文件"
 	@echo "  make check-compilers - 检查编译器版本"
 	@echo "  make info            - 显示系统信息"
+ifeq ($(OS),windows)
+	@echo "$(BLUE)Windows 打包命令:$(NC)"
+	@echo "  make dist-mingw64    - 为 MinGW64 创建分发包（包含所需 DLL）"
+	@echo "  make clean-dist      - 清理分发包"
+endif
 
 # 使用 GCC 编译
 .PHONY: build-gcc
@@ -253,3 +258,108 @@ info:
 	@echo "  - 库路径: $(ROCKSDB_LIB_PATH)"
 	@echo "  - 头文件路径: $(ROCKSDB_INCLUDE_PATH)"
 	@echo "  - 链接库: $(ROCKSDB_LIBS)"
+
+# Windows 专用的 MinGW64 分发包
+ifeq ($(OS),windows)
+# MinGW64 分发包目标
+.PHONY: dist-mingw64
+dist-mingw64: build-release
+	@echo "$(GREEN)创建 MinGW64 分发包...$(NC)"
+	@echo "$(YELLOW)编译完成后复制依赖的 DLL 文件...$(NC)"
+	# 创建分发包目录
+	mkdir -p dist/mingw64
+	# 复制可执行文件
+	cp target/release/$(PROJECT_NAME).exe dist/mingw64/
+	# 复制依赖的 DLL 文件
+	@if [ -f "/mingw64/bin/librocksdb.dll" ]; then \
+		cp /mingw64/bin/librocksdb.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 librocksdb.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 librocksdb.dll$(NC)"; \
+		exit 1; \
+	fi
+	@if [ -f "/mingw64/bin/libgcc_s_seh-1.dll" ]; then \
+		cp /mingw64/bin/libgcc_s_seh-1.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 libgcc_s_seh-1.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libgcc_s_seh-1.dll$(NC)"; \
+	fi
+	@if [ -f "/mingw64/bin/libwinpthread-1.dll" ]; then \
+		cp /mingw64/bin/libwinpthread-1.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 libwinpthread-1.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libwinpthread-1.dll$(NC)"; \
+	fi
+	@if [ -f "/mingw64/bin/libstdc++-6.dll" ]; then \
+		cp /mingw64/bin/libstdc++-6.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 libstdc++-6.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libstdc++-6.dll$(NC)"; \
+	fi
+	@if [ -f "/mingw64/bin/liblz4.dll" ]; then \
+		cp /mingw64/bin/liblz4.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 liblz4.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 liblz4.dll$(NC)"; \
+	fi
+	@if [ -f "/mingw64/bin/zlib1.dll" ]; then \
+		cp /mingw64/bin/zlib1.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 zlib1.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 zlib1.dll$(NC)"; \
+	fi
+	@if [ -f "/mingw64/bin/libzstd.dll" ]; then \
+		cp /mingw64/bin/libzstd.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 libzstd.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libzstd.dll$(NC)"; \
+	fi
+	@if [ -f "/mingw64/bin/libbz2-1.dll" ]; then \
+		cp /mingw64/bin/libbz2-1.dll dist/mingw64/; \
+		echo "$(GREEN)✓ 复制 libbz2-1.dll$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libbz2-1.dll$(NC)"; \
+	fi
+	# 创建说明文件
+	@echo "$(BLUE)$(PROJECT_NAME) MinGW64 分发包$(NC)" > dist/mingw64/README.txt
+	@echo "构建时间: $(shell date)" >> dist/mingw64/README.txt
+	@echo "操作系统: $(OS) $(shell uname -m)" >> dist/mingw64/README.txt
+	@echo "" >> dist/mingw64/README.txt
+	@echo "包含的文件:" >> dist/mingw64/README.txt
+	@echo "- $(PROJECT_NAME).exe (主程序)" >> dist/mingw64/README.txt
+	@echo "- librocksdb.dll (RocksDB 库)" >> dist/mingw64/README.txt
+	@echo "- libgcc_s_seh-1.dll (GCC 运行时)" >> dist/mingw64/README.txt
+	@echo "- libwinpthread-1.dll (POSIX 线程库)" >> dist/mingw64/README.txt
+	@echo "- libstdc++-6.dll (C++ 标准库)" >> dist/mingw64/README.txt
+	@echo "- liblz4.dll (LZ4 压缩库)" >> dist/mingw64/README.txt
+	@echo "- zlib1.dll (Zlib 压缩库)" >> dist/mingw64/README.txt
+	@echo "- libzstd.dll (Zstandard 压缩库)" >> dist/mingw64/README.txt
+	@echo "- libbz2-1.dll (Bzip2 压缩库)" >> dist/mingw64/README.txt
+	@echo "" >> dist/mingw64/README.txt
+	@echo "使用说明:" >> dist/mingw64/README.txt
+	@echo "1. 在 Windows CMD 中直接运行 $(PROJECT_NAME).exe" >> dist/mingw64/README.txt
+	@echo "2. 所有必需的 DLL 文件都包含在此目录中" >> dist/mingw64/README.txt
+	@echo "3. 无需额外安装 MSYS2 或其他依赖" >> dist/mingw64/README.txt
+	@echo "" >> dist/mingw64/README.txt
+	@echo "注意: 此分发包仅适用于 Windows 系统" >> dist/mingw64/README.txt
+	# 显示分发包内容
+	@echo "$(GREEN)MinGW64 分发包创建完成！$(NC)"
+	@echo "$(BLUE)分发包位置: dist/mingw64/$(NC)"
+	@echo "$(YELLOW)分发包内容:$(NC)"
+	@ls -la dist/mingw64/
+
+# 清理分发包
+.PHONY: clean-dist
+clean-dist:
+	@echo "$(GREEN)清理分发包...$(NC)"
+	rm -rf dist/
+	@echo "$(GREEN)分发包清理完成$(NC)"
+
+# 创建 ZIP 压缩包（需要 zip 命令）
+.PHONY: zip-dist
+zip-dist: dist-mingw64
+	@echo "$(GREEN)创建 ZIP 压缩包...$(NC)"
+	cd dist && zip -r $(PROJECT_NAME)-mingw64-$(shell date +%Y%m%d-%H%M%S).zip mingw64/
+	@echo "$(GREEN)ZIP 压缩包创建完成！$(NC)"
+	@ls -la dist/*.zip
+endif
