@@ -97,6 +97,10 @@ else ifeq ($(OS),macos)
 	@echo "$(BLUE)macOS 打包命令:$(NC)"
 	@echo "  make dist-macos      - 为 macOS 创建分发包（包含所需动态库）"
 	@echo "  make clean-dist      - 清理分发包"
+else ifeq ($(OS),debian)
+	@echo "$(BLUE)Debian 打包命令:$(NC)"
+	@echo "  make dist-debian     - 为 Debian/Ubuntu 创建分发包（包含所需动态库）"
+	@echo "  make clean-dist      - 清理分发包"
 endif
 
 # 使用 GCC 编译
@@ -419,6 +423,93 @@ dist-macos: build-release
 	@echo "$(BLUE)分发包位置: dist/macos-aarch64/$(NC)"
 	@echo "$(YELLOW)分发包内容:$(NC)"
 	@ls -la dist/macos-aarch64/
+
+# Debian/Ubuntu 分发包目标
+.PHONY: dist-debian
+dist-debian: build-release
+	@echo "$(GREEN)创建 Debian/Ubuntu 分发包...$(NC)"
+	@echo "$(YELLOW)编译完成后复制依赖的动态库文件...$(NC)"
+	# 创建分发包目录
+	mkdir -p dist/debian-x86_64
+	# 复制可执行文件
+	cp target/release/$(PROJECT_NAME) dist/debian-x86_64/
+	# 复制依赖的动态库文件
+	@if [ -f "/usr/lib/x86_64-linux-gnu/librocksdb.so" ]; then \
+		cp /usr/lib/x86_64-linux-gnu/librocksdb.so dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 librocksdb.so$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 librocksdb.so$(NC)"; \
+		exit 1; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/libgflags.so.2.2" ]; then \
+		cp /lib/x86_64-linux-gnu/libgflags.so.2.2 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 libgflags.so.2.2$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libgflags.so.2.2$(NC)"; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/libsnappy.so.1" ]; then \
+		cp /lib/x86_64-linux-gnu/libsnappy.so.1 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 libsnappy.so.1$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libsnappy.so.1$(NC)"; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/liblz4.so.1" ]; then \
+		cp /lib/x86_64-linux-gnu/liblz4.so.1 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 liblz4.so.1$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 liblz4.so.1$(NC)"; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/libzstd.so.1" ]; then \
+		cp /lib/x86_64-linux-gnu/libzstd.so.1 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 libzstd.so.1$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libzstd.so.1$(NC)"; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/libbz2.so.1.0" ]; then \
+		cp /lib/x86_64-linux-gnu/libbz2.so.1.0 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 libbz2.so.1.0$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libbz2.so.1.0$(NC)"; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/libz.so.1" ]; then \
+		cp /lib/x86_64-linux-gnu/libz.so.1 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 libz.so.1$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libz.so.1$(NC)"; \
+	fi
+	@if [ -f "/lib/x86_64-linux-gnu/libxxhash.so.0" ]; then \
+		cp /lib/x86_64-linux-gnu/libxxhash.so.0 dist/debian-x86_64/; \
+		echo "$(GREEN)✓ 复制 libxxhash.so.0$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libxxhash.so.0$(NC)"; \
+	fi
+	# 创建说明文件
+	@echo "$(BLUE)$(PROJECT_NAME) Debian/Ubuntu x86_64 分发包$(NC)" > dist/debian-x86_64/README.txt
+	@echo "构建时间: $(shell date)" >> dist/debian-x86_64/README.txt
+	@echo "操作系统: $(OS) $(shell uname -m)" >> dist/debian-x86_64/README.txt
+	@echo "" >> dist/debian-x86_64/README.txt
+	@echo "包含的文件:" >> dist/debian-x86_64/README.txt
+	@echo "- $(PROJECT_NAME) (主程序)" >> dist/debian-x86_64/README.txt
+	@echo "- librocksdb.so (RocksDB 库)" >> dist/debian-x86_64/README.txt
+	@echo "- libgflags.so.2.2 (gflags 配置库)" >> dist/debian-x86_64/README.txt
+	@echo "- libsnappy.so.1 (Snappy 压缩库)" >> dist/debian-x86_64/README.txt
+	@echo "- liblz4.so.1 (LZ4 压缩库)" >> dist/debian-x86_64/README.txt
+	@echo "- libzstd.so.1 (Zstandard 压缩库)" >> dist/debian-x86_64/README.txt
+	@echo "- libbz2.so.1.0 (Bzip2 压缩库)" >> dist/debian-x86_64/README.txt
+	@echo "- libz.so.1 (Zlib 压缩库)" >> dist/debian-x86_64/README.txt
+	@echo "- libxxhash.so.0 (xxHash 哈希库)" >> dist/debian-x86_64/README.txt
+	@echo "" >> dist/debian-x86_64/README.txt
+	@echo "使用说明:" >> dist/debian-x86_64/README.txt
+	@echo "1. 在终端中运行: LD_LIBRARY_PATH=. ./$(PROJECT_NAME)" >> dist/debian-x86_64/README.txt
+	@echo "2. 所有必需的动态库文件都包含在此目录中" >> dist/debian-x86_64/README.txt
+	@echo "3. 无需额外安装系统依赖包" >> dist/debian-x86_64/README.txt
+	@echo "" >> dist/debian-x86_64/README.txt
+	@echo "注意: 此分发包仅适用于 Debian/Ubuntu x86_64 系统" >> dist/debian-x86_64/README.txt
+	# 显示分发包内容
+	@echo "$(GREEN)Debian/Ubuntu 分发包创建完成！$(NC)"
+	@echo "$(BLUE)分发包位置: dist/debian-x86_64/$(NC)"
+	@echo "$(YELLOW)分发包内容:$(NC)"
+	@ls -la dist/debian-x86_64/
 
 # 清理分发包
 .PHONY: clean-dist
