@@ -10,7 +10,8 @@ name = "rocksdb_lz4_test"
 path = "src/lib.rs"
 
 [dependencies]
-rocksdb = { version = "0.24", features = ["mt_static"] }
+#rocksdb = { version = "0.24", features = ["mt_static"] }
+rocksdb = "0.24"
 lz4 = "1.24"
 tempfile = "3.8"
 
