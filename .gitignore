@@ -22,3 +22,4 @@ Thumbs.db
 
 # 分发包目录
 /dist
+/build_output.txt
