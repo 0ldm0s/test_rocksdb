@@ -93,6 +93,10 @@ ifeq ($(OS),windows)
 	@echo "$(BLUE)Windows 打包命令:$(NC)"
 	@echo "  make dist-mingw64    - 为 MinGW64 创建分发包（包含所需 DLL）"
 	@echo "  make clean-dist      - 清理分发包"
+else ifeq ($(OS),macos)
+	@echo "$(BLUE)macOS 打包命令:$(NC)"
+	@echo "  make dist-macos      - 为 macOS 创建分发包（包含所需动态库）"
+	@echo "  make clean-dist      - 清理分发包"
 endif
 
 # 使用 GCC 编译
@@ -347,6 +351,74 @@ dist-mingw64: build-release
 	@echo "$(BLUE)分发包位置: dist/mingw64/$(NC)"
 	@echo "$(YELLOW)分发包内容:$(NC)"
 	@ls -la dist/mingw64/
+endif
+
+
+# macOS aarch64 分发包目标
+.PHONY: dist-macos
+dist-macos: build-release
+	@echo "$(GREEN)创建 macOS aarch64 分发包...$(NC)"
+	@echo "$(YELLOW)编译完成后复制依赖的动态库文件...$(NC)"
+	# 创建分发包目录
+	mkdir -p dist/macos-aarch64
+	# 复制可执行文件
+	cp target/release/$(PROJECT_NAME) dist/macos-aarch64/
+	# 复制依赖的动态库文件
+	@if [ -f "$(ROCKSDB_LIB_PATH)/librocksdb.dylib" ]; then \
+		cp $(ROCKSDB_LIB_PATH)/librocksdb.dylib dist/macos-aarch64/; \
+		echo "$(GREEN)✓ 复制 librocksdb.dylib$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 librocksdb.dylib$(NC)"; \
+		exit 1; \
+	fi
+	@if [ -f "$(ROCKSDB_LIB_PATH)/libgflags.dylib" ]; then \
+		cp $(ROCKSDB_LIB_PATH)/libgflags.dylib dist/macos-aarch64/; \
+		echo "$(GREEN)✓ 复制 libgflags.dylib$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libgflags.dylib$(NC)"; \
+	fi
+	@if [ -f "$(ROCKSDB_LIB_PATH)/libsnappy.dylib" ]; then \
+		cp $(ROCKSDB_LIB_PATH)/libsnappy.dylib dist/macos-aarch64/; \
+		echo "$(GREEN)✓ 复制 libsnappy.dylib$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libsnappy.dylib$(NC)"; \
+	fi
+	@if [ -f "$(ROCKSDB_LIB_PATH)/liblz4.dylib" ]; then \
+		cp $(ROCKSDB_LIB_PATH)/liblz4.dylib dist/macos-aarch64/; \
+		echo "$(GREEN)✓ 复制 liblz4.dylib$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 liblz4.dylib$(NC)"; \
+	fi
+	@if [ -f "$(ROCKSDB_LIB_PATH)/libzstd.dylib" ]; then \
+		cp $(ROCKSDB_LIB_PATH)/libzstd.dylib dist/macos-aarch64/; \
+		echo "$(GREEN)✓ 复制 libzstd.dylib$(NC)"; \
+	else \
+		echo "$(RED)✗ 找不到 libzstd.dylib$(NC)"; \
+	fi
+	# 创建说明文件
+	@echo "$(BLUE)$(PROJECT_NAME) macOS aarch64 分发包$(NC)" > dist/macos-aarch64/README.txt
+	@echo "构建时间: $(shell date)" >> dist/macos-aarch64/README.txt
+	@echo "操作系统: $(OS) $(shell uname -m)" >> dist/macos-aarch64/README.txt
+	@echo "" >> dist/macos-aarch64/README.txt
+	@echo "包含的文件:" >> dist/macos-aarch64/README.txt
+	@echo "- $(PROJECT_NAME) (主程序)" >> dist/macos-aarch64/README.txt
+	@echo "- librocksdb.dylib (RocksDB 库)" >> dist/macos-aarch64/README.txt
+	@echo "- libgflags.dylib (gflags 配置库)" >> dist/macos-aarch64/README.txt
+	@echo "- libsnappy.dylib (Snappy 压缩库)" >> dist/macos-aarch64/README.txt
+	@echo "- liblz4.dylib (LZ4 压缩库)" >> dist/macos-aarch64/README.txt
+	@echo "- libzstd.dylib (Zstandard 压缩库)" >> dist/macos-aarch64/README.txt
+	@echo "" >> dist/macos-aarch64/README.txt
+	@echo "使用说明:" >> dist/macos-aarch64/README.txt
+	@echo "1. 在终端中运行: ./$(PROJECT_NAME)" >> dist/macos-aarch64/README.txt
+	@echo "2. 所有必需的动态库文件都包含在此目录中" >> dist/macos-aarch64/README.txt
+	@echo "3. 无需额外安装 Homebrew 或其他依赖" >> dist/macos-aarch64/README.txt
+	@echo "" >> dist/macos-aarch64/README.txt
+	@echo "注意: 此分发包仅适用于 macOS aarch64 (Apple Silicon) 系统" >> dist/macos-aarch64/README.txt
+	# 显示分发包内容
+	@echo "$(GREEN)macOS aarch64 分发包创建完成！$(NC)"
+	@echo "$(BLUE)分发包位置: dist/macos-aarch64/$(NC)"
+	@echo "$(YELLOW)分发包内容:$(NC)"
+	@ls -la dist/macos-aarch64/
 
 # 清理分发包
 .PHONY: clean-dist
@@ -362,4 +434,3 @@ zip-dist: dist-mingw64
 	cd dist && zip -r $(PROJECT_NAME)-mingw64-$(shell date +%Y%m%d-%H%M%S).zip mingw64/
 	@echo "$(GREEN)ZIP 压缩包创建完成！$(NC)"
 	@ls -la dist/*.zip
-endif
